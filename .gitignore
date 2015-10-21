@@ -1,0 +1,17 @@
+#
+#liyangyao@gamil.com 
+#
+
+#binary
+*.exe
+
+# Qt-project
+*.pro.user
+*.pro.user.*
+
+# QtCreator
+*.autosave
+
+#compile file
+build-*/
+bin/
