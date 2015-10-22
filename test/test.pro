@@ -1,4 +1,4 @@
-QT       += testlib
+QT       += testlib axcontainer
 
 QT       -= gui
 
@@ -13,7 +13,8 @@ TEMPLATE = app
 SOURCES += main.cpp
 
 HEADERS += \
-    tst_singleton.h
+    tst_singleton.h \
+    tst_wmiquery.h
 
 INCLUDEPATH += $$PWD/../..
 

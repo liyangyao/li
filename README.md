@@ -8,4 +8,5 @@ include
 * Singleton
 * Debug
 * WriteDump
+* WmiQuery
 
