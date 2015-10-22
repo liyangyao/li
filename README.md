@@ -10,3 +10,15 @@ include
 * WriteDump
 * WmiQuery
 
+		void getCPUUsage()
+		{
+		    m_query.exec("select LoadPercentage from Win32_Processor");
+		    if(m_query.next())
+		    {
+		        qDebug()<<"Cpu LoadPercentage:"<< m_query.value(0).toString();
+		    }
+		    else{
+		        qDebug()<<m_query.lastError();
+		    }
+		}
+

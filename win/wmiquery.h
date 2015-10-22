@@ -14,7 +14,7 @@ Date: 2015/10/21
 #include <qaxtypes.h>
 #include <QVariant>
 #include <QStringList>
-#include <iostream>
+
 #pragma comment(lib, "wbemuuid.lib")
 
 #ifdef Q_CC_MSVC
@@ -37,7 +37,7 @@ public:
         }
     }
 
-    bool exec(const QString &sql)
+    void exec(const QString &sql)
     {
         if (m_hasResult)
         {
@@ -47,7 +47,7 @@ public:
         }
         if (!pLoc || !pSvc)
         {
-            return false;
+            return;
         }
         if (pEnumerator)
         {
@@ -64,10 +64,8 @@ public:
         if (FAILED(m_lastRes))
         {
             m_error = QLatin1String("Unable to launch pSvc->ExecQuery");
-            return false;
+            return;
         }
-
-        return true;
     }
 
     bool next()
@@ -144,19 +142,25 @@ private:
 
     bool init()
     {
-        m_lastRes =  CoInitialize( NULL );
+        m_lastRes = CoInitializeEx(0, COINIT_MULTITHREADED);
         if (FAILED(m_lastRes))
         {
             m_error = QLatin1String("Unable to launch COM");
             return false;
         }
 
-        m_lastRes = CoCreateInstance(
-                    CLSID_WbemLocator,
-                    0,
-                    CLSCTX_INPROC_SERVER,
-                    IID_IWbemLocator, (LPVOID *) &pLoc);
+        m_lastRes = CoInitializeSecurity(NULL, -1, NULL, NULL,
+                                         RPC_C_AUTHN_LEVEL_DEFAULT,
+                                         RPC_C_IMP_LEVEL_IMPERSONATE, NULL,
+                                         EOAC_NONE, NULL);
+        if (FAILED(m_lastRes))
+        {
+            m_error = QLatin1String("Unable to CoInitializeSecurity");
+            return false;
+        }
 
+        m_lastRes = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
+                    IID_IWbemLocator, (LPVOID *) &pLoc);
         if (FAILED(m_lastRes))
         {
             m_error = QLatin1String("Unable to create a WbemLocator");
@@ -164,16 +168,8 @@ private:
             return false;
         }
 
-        m_lastRes = pLoc->ConnectServer(
-                    _bstr_t(L"ROOT\\CIMV2"),
-                    NULL,
-                    NULL,
-                    0,
-                    NULL,
-                    0,
-                    0,
-                    &pSvc
-                    );
+        m_lastRes = pLoc->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), NULL, NULL, 0,
+                    NULL, 0, 0, &pSvc);
 
         if (FAILED(m_lastRes))
         {            
@@ -183,23 +179,15 @@ private:
             return false;
         }
 
-        m_lastRes = CoSetProxyBlanket(
-                    pSvc,
-                    RPC_C_AUTHN_WINNT,
-                    RPC_C_AUTHZ_NONE,
-                    NULL,
-                    RPC_C_AUTHN_LEVEL_CALL,
-                    RPC_C_IMP_LEVEL_IMPERSONATE,
-                    NULL,
-                    EOAC_NONE
-                    );
+//        m_lastRes = CoSetProxyBlanket(pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE,
+//                    NULL, RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE,
+//                    NULL, EOAC_NONE);
 
-        if (FAILED(m_lastRes))
-        {
-            m_error = QLatin1String("Unable to CoSetProxyBlanket");
-            return false;
-        }
-
+//        if (FAILED(m_lastRes))
+//        {
+//            m_error = QLatin1String("Unable to CoSetProxyBlanket");
+//            return false;
+//        }
         return true;
     }
 
