@@ -88,15 +88,15 @@ public:
             return false;
         }
 
-        m_lastRes = pclsObj->BeginEnumeration(WBEM_FLAG_LOCAL_ONLY);
+        m_lastRes = pclsObj->BeginEnumeration(WBEM_FLAG_NONSYSTEM_ONLY);
+        m_valueList.clear();
         do {
             BSTR bstrName;
             VARIANT Value;
             m_lastRes = pclsObj->Next(0, &bstrName, &Value, NULL, NULL);
             if (WBEM_S_NO_ERROR == m_lastRes)
             {
-                QVariant v = VARIANTToQVariant(Value, NULL);
-                //qDebug()<<"bstrName:"<<QString::fromWCharArray(bstrName)<<" value:"<<v.toString();
+                QVariant v = VARIANTToQVariant(Value, NULL);                
                 m_valueList.append(v);
                 if (!m_hasResult)
                 {
@@ -118,6 +118,11 @@ public:
     const QStringList& columnList()
     {
         return m_columnList;
+    }
+
+    const QVariantList& valueList()
+    {
+        return m_valueList;
     }
 
     QString lastError()
@@ -149,15 +154,15 @@ private:
             return false;
         }
 
-        m_lastRes = CoInitializeSecurity(NULL, -1, NULL, NULL,
-                                         RPC_C_AUTHN_LEVEL_DEFAULT,
-                                         RPC_C_IMP_LEVEL_IMPERSONATE, NULL,
-                                         EOAC_NONE, NULL);
-        if (FAILED(m_lastRes))
-        {
-            m_error = QLatin1String("Unable to CoInitializeSecurity");
-            return false;
-        }
+//        m_lastRes = CoInitializeSecurity(NULL, -1, NULL, NULL,
+//                                         RPC_C_AUTHN_LEVEL_DEFAULT,
+//                                         RPC_C_IMP_LEVEL_IMPERSONATE, NULL,
+//                                         EOAC_NONE, NULL);
+//        if (FAILED(m_lastRes))
+//        {
+//            m_error = QLatin1String("Unable to CoInitializeSecurity");
+//            return false;
+//        }
 
         m_lastRes = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
                     IID_IWbemLocator, (LPVOID *) &pLoc);
@@ -179,15 +184,15 @@ private:
             return false;
         }
 
-//        m_lastRes = CoSetProxyBlanket(pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE,
-//                    NULL, RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE,
-//                    NULL, EOAC_NONE);
+        m_lastRes = CoSetProxyBlanket(pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE,
+                    NULL, RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE,
+                    NULL, EOAC_NONE);
 
-//        if (FAILED(m_lastRes))
-//        {
-//            m_error = QLatin1String("Unable to CoSetProxyBlanket");
-//            return false;
-//        }
+        if (FAILED(m_lastRes))
+        {
+            m_error = QLatin1String("Unable to CoSetProxyBlanket");
+            return false;
+        }
         return true;
     }
 

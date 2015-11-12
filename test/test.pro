@@ -17,4 +17,5 @@ HEADERS += \
     tst_wmiquery.h
 
 INCLUDEPATH += $$PWD/../..
+INCLUDEPATH += D:\\workspace\\QiAnProject\\src\\mylib\\RapidJSON\\include
 

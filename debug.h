@@ -73,7 +73,7 @@ private:
         if (ins->m_isOutputConsole)
         {
             OutputDebugString((LPCWSTR)s.utf16());
-            OutputDebugString(L" --END\r\n");
+            OutputDebugString(L"\r\n");
         }
         if (ins->m_isOutputFile)
         {
@@ -174,7 +174,6 @@ private:
 
     void run()
     {
-        OutputDebugStringA("EnterThread\r\n");
         std::unique_ptr<QFile> f;
         while (true)
         {
