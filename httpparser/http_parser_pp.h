@@ -132,7 +132,7 @@ private:
 
     static int on_headers_complete(http_parser* parser)
     {
-        //qDebug()<<"on_headers_complete";
+        qDebug()<<"on_headers_complete content_length="<<parser->content_length;
         HttpParser* self  = reinterpret_cast<HttpParser*>(parser->data);
         if (self->onHeadersComplete)
         {

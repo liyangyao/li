@@ -9,6 +9,15 @@ Date: 2015/6/30
 #include <QtTest>
 #include <httpparser/http_parser_pp.h>
 
+class Http
+{
+private:
+    QByteArray body;
+    QMap<QString, QString> headers;
+    QString path;
+    QString url;
+};
+
 class Http_parser_test : public QObject
 {
     Q_OBJECT
@@ -16,10 +25,11 @@ class Http_parser_test : public QObject
 public:
     Http_parser_test();
 
-private Q_SLOTS:
+private Q_SLOTS:    
     void No_ContentLength();
     void chunked();
     void Body_Test();
+    void Upgrade_Test();
 
 private:
     bool test(const QByteArray &d);
@@ -28,6 +38,7 @@ private:
 Http_parser_test::Http_parser_test()
 {
     qDebug()<<http_parser_version();
+    qDebug()<<"ULLONG_MAX="<<ULLONG_MAX;
 }
 
 bool Http_parser_test::test(const QByteArray &d)
@@ -83,16 +94,54 @@ void Http_parser_test::No_ContentLength()
 void Http_parser_test::chunked()
 {
     bool pass = test("POST /post HTTP/1.1\r\nTransfer-encoding: chunked\r\n\r\n"
-                 "1\r\na\r\n"
-                 "2\r\nab\r\n"
-                 "0\r\n\r\n");
-QVERIFY2(pass, "Failure");
+                     "1\r\na\r\n"
+                     "2\r\nab\r\n"
+                     "0\r\n\r\n");
+    QVERIFY2(pass, "Failure");
 }
 
 void Http_parser_test::Body_Test()
 {
     bool pass = test("POST /post HTTP/1.1\r\nContent-Length: 3\r\n\r\nYes");
     QVERIFY2(pass, "Failure");
+}
+
+void Http_parser_test::Upgrade_Test()
+{
+    QByteArray input = "GET /demo HTTP/1.1\r\n"
+            "Upgrade: WebSocket\r\n"
+            "Connection: Upgrade\r\n"
+            "Host: example.com\r\n"
+            "Origin: http://example.com\r\n"
+            "Content-Length: 5\r\n"
+            "WebSocket-Protocol: sample\r\n\r\nWorld";
+   HttpParser hp;
+    QByteArray data;
+    hp.onMessageBegin = [&]()
+    {
+        qDebug()<<"onMessageBegin";
+        return 0;
+    };
+
+    hp.onBody = [&](const char *at, size_t length)->int
+    {
+        data.append(at, length);
+        return 0;
+    };
+
+    hp.onMessageComplete = [&]()
+    {
+        qDebug()<<"body is ["<<data<<"]";
+        qDebug()<<"onMessageComplete";
+        return 0;
+    };
+
+
+    int n = hp.execute(input.constData(), input.length());
+    if (hp.upgrade())
+    {
+        qDebug()<<"Is Upgrade";
+    }
 }
 
 
