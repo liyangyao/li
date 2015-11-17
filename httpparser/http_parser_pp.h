@@ -17,9 +17,10 @@ class HttpParser
 public:
     typedef std::function<int()> HttpCallback;
     typedef std::function<int(const char *at, size_t length)> HttpDataCallback;
-    explicit HttpParser()
+    explicit HttpParser(enum http_parser_type t = HTTP_REQUEST)
     {
         m_parser.data = this;
+        m_parserType = t;
     }
 
     size_t execute(const char *data, size_t len)
@@ -29,6 +30,7 @@ public:
             m_settings.reset(new http_parser_settings);
             m_settings->on_message_begin = on_message_begin;
             m_settings->on_url = on_url;
+            m_settings->on_status = nullptr;
             m_settings->on_header_field = on_header_field;
             m_settings->on_header_value = on_header_value;
             m_settings->on_headers_complete = on_headers_complete;
@@ -36,7 +38,7 @@ public:
             m_settings->on_message_complete = on_message_complete;
             m_settings->on_chunk_header = on_chunk_header;
             m_settings->on_chunk_complete = on_chunk_complete;
-            http_parser_init(&m_parser, HTTP_REQUEST);
+            http_parser_init(&m_parser, m_parserType);
 
         }
         int ret = http_parser_execute(&m_parser, m_settings.get(), data, len);
@@ -85,6 +87,7 @@ public:
 
 private:
     http_parser m_parser;
+    http_parser_type m_parserType;
     std::unique_ptr<http_parser_settings> m_settings;
     static int on_message_begin(http_parser* parser)
     {

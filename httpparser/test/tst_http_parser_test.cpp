@@ -8,6 +8,7 @@ Date: 2015/6/30
 #include <QString>
 #include <QtTest>
 #include <httpparser/http_parser_pp.h>
+#include <QTcpSocket>
 
 class Http
 {
@@ -30,6 +31,7 @@ private Q_SLOTS:
     void chunked();
     void Body_Test();
     void Upgrade_Test();
+    void Network_Baidu_Test();
 
 private:
     bool test(const QByteArray &d);
@@ -141,6 +143,54 @@ void Http_parser_test::Upgrade_Test()
     if (hp.upgrade())
     {
         qDebug()<<"Is Upgrade";
+    }
+}
+
+void Http_parser_test::Network_Baidu_Test()
+{
+    bool complete = false;
+    QByteArray body;
+    HttpParser hp(HTTP_BOTH);
+    hp.onMessageBegin = [&]()
+    {
+        qDebug()<<"onMessageBegin";
+        return 0;
+    };
+
+    hp.onBody = [&](const char *at, size_t length)->int
+    {
+        qDebug()<<"onBody";
+        body.append(at, length);
+        return 0;
+    };
+
+    hp.onMessageComplete = [&]()
+    {
+        qDebug()<<"body is ["<<body<<"]";
+        qDebug()<<"onMessageComplete";
+        complete = true;
+        return 0;
+    };
+
+
+    QTcpSocket socket;
+    socket.connectToHost("www.baidu.com", 80);
+    if (!socket.waitForConnected())
+    {
+        QVERIFY2(false, "connect fail");
+        return;
+    }
+    socket.write("GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n");
+    while (!complete)
+    {
+        if (!socket.waitForReadyRead(5*1000))
+        {
+            QVERIFY2(false, "socket error");
+            return;
+        }
+        QByteArray data = socket.readAll();
+        qDebug()<<"data:"<<data;
+        hp.execute(data.constData(), data.size());
     }
 }
 
