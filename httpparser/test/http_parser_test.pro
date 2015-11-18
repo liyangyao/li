@@ -15,10 +15,14 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += tst_http_parser_test.cpp
+SOURCES += tst_http_parser_test.cpp \
+    httpparserex.cpp
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
 
 include(..\..\HttpParser.pri)
 INCLUDEPATH += (..\..\..\)
+
+HEADERS += \
+    httpparserex.h
 
