@@ -11,6 +11,7 @@ Date: 2015/11/18
 #include <QMap>
 #include <QHash>
 #include <memory>
+#include <QVector>
 #include "httpparser/http_parser.h"
 
 class ParserData
@@ -38,6 +39,7 @@ class HttpParserEx
 {
 public:
     HttpParserEx();
+    bool execute(const char* data, int length);
 
 private:
     static int on_message_begin(http_parser* parser);
@@ -53,6 +55,11 @@ private:
     QByteArray headerValue;
     bool lastWasValue;
     ParserDataPtr data;
+    QVector<ParserDataPtr> m_dataList;
+
+    http_parser parser;
+    char* pCurrentData;
+    int posStart;
     void insertHeaderFieldValue();
 };
 
